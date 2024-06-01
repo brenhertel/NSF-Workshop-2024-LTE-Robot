@@ -17,5 +17,5 @@ This repository contains instructions and files for the robot demonstration of t
 14. On the computer, open up a new terminal and type `source devel/setup.bash`.
 15. In this terminal, run the `lte_workshop_demo.py` file when ready for a demo. Be sure to replace the `lte.py` file with each student's file before each demo. This demo file will go through multiple steps.
     - First, the user will perform a demonstration. To begin recording the demonstration, press [Enter] once the prompt is available.
-    - Next, the user will put in new constraints. I recommend this is done by moving the robot to a point and looking at `rostopic echo \tf` to see the robot position.
+    - Next, the user will put in new constraints. This is done by moving the robot to a point and pressing [Enter].
     - Finally, a reproduction is performed according to LTE. Be careful during the reproduction and always be ready to press the emergency stop in case.
