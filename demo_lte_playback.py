@@ -69,7 +69,7 @@ class MoveGroupPythonInterface(object):
         #the moveit_commander is what is responsible for sending info the moveit controllers
         moveit_commander.roscpp_initialize(sys.argv)
         #initialize node
-        rospy.init_node('demo_xyz_playback', anonymous=True)
+        #rospy.init_node('demo_xyz_playback', anonymous=True)
         #Instantiate a `RobotCommander`_ object. Provides information such as the robot's kinematic model and the robot's current joint states
         robot = moveit_commander.RobotCommander()
         #Instantiate a `PlanningSceneInterface`_ object. This provides a remote interface for getting, setting, and updating the robot's internal understanding of the surrounding world:
@@ -137,18 +137,18 @@ class MoveGroupPythonInterface(object):
         self.move_group.execute(start_plan, wait=True)
       
       
-    def plan_cartesian_path(self, name, pos_const, rot_const scale=1):
+    def plan_cartesian_path(self, name, pos_const, rot_const):
         _, pos_data, rot_data = get_h5_info(name)
         
         traj, ds_inds = DouglasPeuckerPoints2(pos_data, 100)
         ds_rot = rot_data[ds_inds, :]
         
-        cst_idx = np.argmin(traj[:, 2]) #use lowest z value as constraint point
+        #cst_idx = np.argmin(traj[:, 2]) #use lowest z value as constraint point
         
-        consts = [traj[0], pos_const, traj[-1]]
-        inds = [0, cst_idx, len(traj)-1]
+        consts = [pos_const, traj[-1]]
+        inds = [0, len(traj)-1]
         
-        repro_traj = nlte.LTE(traj, consts, inds)
+        repro_traj = lte.LTE(traj, consts, inds)
         (n_pts, n_dims) = np.shape(repro_traj)
         
         
@@ -156,8 +156,7 @@ class MoveGroupPythonInterface(object):
         input()
         self.goto_xyz(repro_traj, ds_rot)
 
-        key_rots = R.from_quat([ [ds_rot[0, 0], ds_rot[0, 1], ds_rot[0, 2], ds_rot[0, 3]], 
-                                 [rot_const[0], rot_const[1], rot_const[2], rot_const[3]],
+        key_rots = R.from_quat([ [rot_const[0], rot_const[1], rot_const[2], rot_const[3]],
                                  [ds_rot[-1, 0], ds_rot[-1, 1], ds_rot[-1, 2], ds_rot[-1, 3]] ])
         
         slerp = Slerp(inds, key_rots)

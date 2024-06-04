@@ -133,46 +133,44 @@ def end_record(js_file, tf_file):
         
     print('Please move the robot to the position of the new constraint. Press [Enter] to record this new constraint position.')
     input()
-    tf_msg = rospy.wait_for_message("/tf", tfMessage)
+    tfmsg = rospy.wait_for_message("/tf", tfMessage)
     while not tfmsg.transforms[0].child_frame_id == 'tool0_controller':
-        tf_msg = rospy.wait_for_message("/tf", tfMessage)
-    pos_const = [tfmsg.transforms[0].transform.translation.x, tfmsg.transforms[0].transform.translation.y, tfmsg.transforms[0].transform.translation.z]
-    rot_const = [tfmsg.transforms[0].transform.rotation.x, tfmsg.transforms[0].transform.rotation.y, tfmsg.transforms[0].transform.rotation.z, tfmsg.transforms[0].transform.rotation.w]
+        tfmsg = rospy.wait_for_message("/tf", tfMessage)
+    pos_const = np.array([tfmsg.transforms[0].transform.translation.x, tfmsg.transforms[0].transform.translation.y, tfmsg.transforms[0].transform.translation.z])
+    rot_const = np.array([tfmsg.transforms[0].transform.rotation.x, tfmsg.transforms[0].transform.rotation.y, tfmsg.transforms[0].transform.rotation.z, tfmsg.transforms[0].transform.rotation.w])
     #os.system("echo -e 'def test(): \n freedrive_mode() \n end_freedrive_mode() \nend \n' | telnet " + HOST + " " + str(PORT))
     demo_lte_playback.lte_demo_playback(name, pos_const, rot_const)
    
 def demo_recorder():
-    try:
-        #create joint states file
-        js_fp = open('joint_data.txt', 'w')
-        #create tf data file
-        tf_fp = open('tf_data.txt', 'w')
+    #create joint states file
+    js_fp = open('joint_data.txt', 'w')
+    #create tf data file
+    tf_fp = open('tf_data.txt', 'w')
+    
+    rospy.init_node('demo_recorder', anonymous=True)
+    
+    print('Press [Enter] to start recording')
+    input()
+    print(time.time())
+    
+    #create subscribers to topics
+    
+    sub_js = rospy.Subscriber("/joint_states", JointState, js_callback, js_fp)
         
-        rospy.init_node('demo_recorder', anonymous=True)
+    sub_tf = rospy.Subscriber("/tf", tfMessage, tf_callback, tf_fp)
+    
         
-        print('Press [Enter] to start recording')
-        input()
-        print(time.time())
+    rospy.loginfo('Recording has started')
+    
+    #start freedrive mode
+    #os.system("echo -e 'def test(): \n freedrive_mode() \nend \n' | telnet " + HOST + " " + str(PORT))
         
-        #create subscribers to topics
-        
-        sub_js = rospy.Subscriber("/joint_states", JointState, js_callback, js_fp)
-            
-        sub_tf = rospy.Subscriber("/tf", tfMessage, tf_callback, tf_fp)
-        
-            
-        rospy.loginfo('Recording has started')
-        
-        #start freedrive mode
-        #os.system("echo -e 'def test(): \n freedrive_mode() \nend \n' | telnet " + HOST + " " + str(PORT))
-            
-        rospy.spin()
-        end_record(js_fp, tf_fp)
-        
-    except rospy.ROSInterruptException:
-        end_record(js_fp, tf_fp)
-    except KeyboardInterrupt:
-        end_record(js_fp, tf_fp)
+    print('Press [Enter] to finish recording')
+    input()
+    print(time.time())
+    sub_js.unregister()
+    sub_tf.unregister()
+    end_record(js_fp, tf_fp)
         
 if __name__ == '__main__':
     demo_recorder()
